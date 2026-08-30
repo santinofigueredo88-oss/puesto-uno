@@ -332,6 +332,17 @@
   .fly-clone { position: fixed; z-index: 80; border-radius: var(--r-md); overflow: hidden; pointer-events: none; box-shadow: var(--sh-2); will-change: transform, opacity; }
   .fly-clone img { width: 100%; height: 100%; object-fit: cover; }
 
+  /* ========================= REVIEWS ========================= */
+  .revs { padding: clamp(2.6rem, 6vw, 4rem) 0 clamp(2.4rem, 6vw, 3.6rem); background: var(--bg-tint); border-top: 1px solid var(--line); }
+  .rev-scroll { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 var(--gutter) .3rem; margin-top: 1.3rem; scrollbar-width: none; }
+  .rev-scroll::-webkit-scrollbar { display: none; }
+  .rev-card { scroll-snap-align: start; flex: 0 0 clamp(15rem, 74vw, 20rem); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-1); padding: 1.25rem 1.35rem 1.4rem; display: flex; flex-direction: column; gap: .7rem; }
+  .rev-stars { display: flex; gap: .1rem; color: var(--amber-bright); font-size: .95rem; letter-spacing: .04em; }
+  .rev-card p { font-family: var(--font-body); font-size: var(--s-0); line-height: 1.5; color: var(--ink); flex: 1; }
+  .rev-who { font-family: var(--font-display); font-weight: 700; font-size: .92rem; color: var(--ink-2); }
+  .rev-cta { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.6rem; background: var(--surface); border: 1px solid var(--line); color: var(--ink); padding: .8rem 1.4rem; border-radius: var(--r-pill); font-family: var(--font-display); font-weight: 700; box-shadow: var(--sh-1); transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
+  .rev-cta:hover { transform: translateY(-2px); box-shadow: var(--sh-2); }
+
   /* ========================= PLACE / HOUSE ========================= */
   .place { position: relative; z-index: 1; background: var(--bg-tint); border-top: 1px solid var(--line); padding-block: clamp(3.6rem, 9vw, 6.5rem); }
   .place-grid { display: grid; gap: clamp(1.8rem, 5vw, 3.5rem); }
@@ -444,6 +455,8 @@
   @media (min-width: 46rem) {
     .feat-scroll { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1.1rem; overflow: visible; width: min(100% - calc(var(--gutter) * 2), var(--wrap)); margin-inline: auto; padding: 0 0 .3rem; }
     .fcard { flex: none; }
+    .rev-scroll { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; overflow: visible; width: min(100% - calc(var(--gutter) * 2), var(--wrap)); margin-inline: auto; padding: 0; }
+    .rev-card { flex: none; }
   }
   @media (min-width: 52rem) {
     .cat { display: grid; grid-template-columns: 1fr 1fr; column-gap: clamp(2rem, 4.5vw, 4rem); align-items: start; }
@@ -560,6 +573,19 @@
     </div>
   </div>
   <div class="feat-scroll reveal" id="featScroll"></div>
+</section>
+
+<section class="revs" aria-label="Lo que dicen">
+  <div class="wrap">
+    <div class="feat-head reveal">
+      <h2>Lo que dicen</h2>
+      <span class="label">reseñas</span>
+    </div>
+  </div>
+  <div class="rev-scroll reveal" id="revScroll"></div>
+  <div class="wrap">
+    <a class="rev-cta reveal" href="#GOOGLE_REVIEWS_LINK" target="_blank" rel="noopener">Dejanos tu reseña en Google <span aria-hidden="true">→</span></a>
+  </div>
 </section>
 
 <nav class="catnav" aria-label="Secciones de la carta">
@@ -708,6 +734,13 @@
     "cl-completa cl-jyq cl-mega cl-simple cl-triple in-agua in-cajita-h in-cajita-p " +
     "pp-aros pp-baston pp-cheddar pp-patitas").split(" ");
 
+  /* ---- reseñas — TODO: reemplazar por reseñas reales de Google ---- */
+  var REVIEWS = [
+    { stars: 5, text: "Las mejores hamburguesas de Baradero. La Bacon Triple es una locura, te llena por dos días.", name: "Martín" },
+    { stars: 5, text: "Pedimos por WhatsApp y llegó rapidísimo, todo bien caliente. Atención de diez.", name: "Carla" },
+    { stars: 5, text: "Vamos a la plaza con los chicos y la Cajita Fantástica es un golazo. Ya somos clientes fijos.", name: "Rodrigo" }
+  ];
+
   var $ = function (s, c) { return (c || document).querySelector(s); };
   var byId = function (id) { for (var g = 0; g < MENU.length; g++) for (var i = 0; i < MENU[g].items.length; i++) if (MENU[g].items[i].id === id) return MENU[g].items[i]; return null; };
   var money = function (n) { return "$" + n.toLocaleString("es-AR"); };
@@ -778,6 +811,20 @@
         '</article>';
     });
     box.innerHTML = html;
+  })();
+
+  /* ---- reseñas ---- */
+  (function () {
+    var box = $("#revScroll"); if (!box) return;
+    box.innerHTML = REVIEWS.map(function (r) {
+      var n = Math.max(0, Math.min(5, r.stars || 5)), stars = "";
+      for (var i = 0; i < 5; i++) stars += (i < n ? "★" : "☆");
+      return '<article class="rev-card">' +
+        '<div class="rev-stars" role="img" aria-label="' + n + ' de 5 estrellas">' + stars + '</div>' +
+        '<p>' + esc(r.text) + '</p>' +
+        '<div class="rev-who">' + esc(r.name) + '</div>' +
+      '</article>';
+    }).join("");
   })();
 
   /* ---- render menu ---- */
