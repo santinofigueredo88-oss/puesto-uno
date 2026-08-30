@@ -309,6 +309,7 @@
   .item-name { grid-column: 2; font-family: var(--font-display); font-weight: 700; font-size: var(--s-1); line-height: 1.24; letter-spacing: -.012em; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; transition: color .18s var(--ease); }
   .item:hover .item-name { color: var(--lime); }
   .tag { font-family: var(--font-body); font-size: .57rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--on-lime); background: var(--amber-bright); border-radius: var(--r-pill); padding: .2rem .55rem; transform: translateY(-1px); }
+  .tag-diet { color: var(--lime); background: transparent; border: 1.5px solid var(--lime); }
   .item .money { grid-column: 3; font-size: var(--s-1); color: var(--ink); transition: color .18s var(--ease); }
   .item:hover .money { color: var(--lime); }
   .item .add { grid-column: 4; }
@@ -328,6 +329,9 @@
   .add:active { transform: scale(.85); }
   .add.added { background: var(--lime-bright); border-color: var(--lime-bright); color: var(--on-lime); transform: none; }
   .fcard .add { border-color: var(--ink); }
+
+  .toast { position: fixed; left: 50%; bottom: 5.5rem; transform: translateX(-50%); z-index: 90; background: var(--ink); color: var(--bg); font-family: var(--font-body); font-weight: 600; font-size: var(--s--1); padding: .7rem 1.1rem; border-radius: var(--r-pill); box-shadow: var(--sh-2); opacity: 0; transition: opacity .25s var(--ease); pointer-events: none; max-width: calc(100vw - 2rem); }
+  .toast.show { opacity: 1; }
 
   .fly-clone { position: fixed; z-index: 80; border-radius: var(--r-md); overflow: hidden; pointer-events: none; box-shadow: var(--sh-2); will-change: transform, opacity; }
   .fly-clone img { width: 100%; height: 100%; object-fit: cover; }
@@ -529,6 +533,7 @@
       <b>Puesto&nbsp;Uno <i>· Baradero</i></b>
     </a>
     <div class="top-actions">
+      <button class="icon-btn" id="shareBtn" aria-label="Compartir la carta"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
       <button class="icon-btn" id="themeTog" aria-label="Cambiar entre modo claro y oscuro" aria-pressed="false"><svg class="i-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg><svg class="i-moon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a1 1 0 0 0-1.3-1.2A10 10 0 1 0 21.2 15.8 1 1 0 0 0 20 14.5Z"/></svg></button>
       <button class="cart-link" id="cartLink" hidden aria-label="Ver pedido">Pedido · <span class="n" id="cartN" aria-live="polite">0</span></button>
     </div>
@@ -703,6 +708,7 @@
     openEnd: 24 * 60
   };
 
+  // Cada item admite un array opcional "tags" para chips dietéticos, ej: tags: ["Picante", "Sin TACC"]
   var MENU = [
     { id: "clasicas", name: "Clásicas", items: [
       { id: "cl-completa", name: "Clásica Gigante Completa", price: 9000, desc: "Medallón de carne, jamón cocido, queso, huevo, lechuga y tomate. Pan con sésamo." },
@@ -789,6 +795,30 @@
       try { localStorage.setItem("p1-theme", next); } catch (e) {}
     });
   })();
+
+  /* compartir carta */
+  (function () {
+    var btn = document.getElementById("shareBtn");
+    if (!btn) return;
+    function toast(msg) {
+      var t = document.createElement("div");
+      t.className = "toast"; t.setAttribute("role", "status"); t.textContent = msg;
+      document.body.appendChild(t);
+      requestAnimationFrame(function () { t.classList.add("show"); });
+      setTimeout(function () { t.classList.remove("show"); setTimeout(function () { t.remove(); }, 350); }, 2000);
+    }
+    btn.addEventListener("click", function () {
+      var url = location.href.split("#")[0];
+      var data = { title: "Puesto Uno Food Truck", text: "Mirá la carta de Puesto Uno y pedí por WhatsApp", url: url };
+      if (navigator.share) {
+        navigator.share(data).catch(function () {});
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { toast("¡Link copiado!"); }, function () { toast(url); });
+      } else {
+        toast(url);
+      }
+    });
+  })();
   var KEY = "puesto1_cart_v3";
 
   var cart = {};
@@ -861,7 +891,10 @@
         : '<span class="item-thumb ph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h16M5 14a7 7 0 0 1 14 0M4 17.5h16M7 10.5c1-1 2.2-1 3 0 .9 1 2.1 1 3 0 .8-1 2-1 3 0"/></svg></span>';
       row.innerHTML =
         thumb +
-        '<div class="item-name">' + it.name + (it.tag ? ' <span class="tag">' + it.tag + '</span>' : '') + '</div>' +
+        '<div class="item-name">' + it.name +
+          (it.tag ? ' <span class="tag">' + it.tag + '</span>' : '') +
+          (it.tags || []).map(function (t) { return ' <span class="tag tag-diet">' + esc(t) + '</span>'; }).join('') +
+        '</div>' +
         '<span class="money">' + money(it.price) + '</span>' +
         '<button class="add" data-add="' + it.id + '" aria-label="Agregar ' + esc(it.name) + '">+</button>' +
         '<p class="item-desc">' + it.desc + '</p>';
